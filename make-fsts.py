@@ -4,7 +4,7 @@ import itertools as it
 from multiprocessing import Pool
 import multiprocessing
 from math import log
-import os, pdb
+import os, optparse
 
 global global_features
 global_features = set([])
@@ -123,20 +123,23 @@ def write_E(save_path, ename, feature_labels_seen, co_oc):
 
 
 if __name__ == '__main__':
+    optparser = optparse.OptionParser()
+    optparser.add_option("-s", "--source", dest="source", default="data/toy2/en", help="source file")
+    optparser.add_option("-t", "--target", dest="target", default="data/toy2/fr", help="target file")
+    optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
+    optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
+    optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=5, type="int", help="span width to count co-occurrence")
+    (opts, _) = optparser.parse_args()
     sym_features = fst.SymbolTable()
     sym_features[fst.EPSILON] = 0
     sym_targets = fst.SymbolTable()
     sym_targets[fst.EPSILON] = 0
-    jump_limit = 5  # float('inf')
-    save_path = 'coursera-20/rev-train-20/'
-    #save_path = 'toy-model1/'
-    feature_type = 'model1'
-    source_sentences = open('data/cousera-small/es20').readlines()
-    target_sentences = open('data/cousera-small/en20').readlines()
-    #source_sentences = open('data/toy/fr').readlines()
-    #target_sentences = open('data/toy/en').readlines()
-    #source_sentences = ['f1 f2', 'f2 f3', 'f2 f4']
-    #target_sentences = ['e1 e2', 'e2 e3', 'e1 e4 e5']
+    jump_limit = opts.jumpWidth  # float('inf')
+    save_path = opts.fstLocation
+    feature_type = opts.featureType
+    source_sentences = open(opts.source).readlines()
+    target_sentences = open(opts.target).readlines()
+
     global_features = set([])
 
     co_occurrence = {}

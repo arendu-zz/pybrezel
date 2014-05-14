@@ -7,6 +7,7 @@ from math import exp as expm
 from logadd import logadd
 import random as rand
 import codecs
+import optparse
 from align import natural_sort as ns
 
 global f_names, f_weights, f_init_weights, exp_machines, obs_chain, inp_machines, path, out_path
@@ -160,16 +161,18 @@ def value(theta):
 
 
 if __name__ == '__main__':
+    optparser = optparse.OptionParser()
+    optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="location of created fsts")
+    optparser.add_option("-o", "--weights-location", dest="weightsLocation", default="fsts/", help="location of trained feature weights")
+    (opts, _) = optparser.parse_args()
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
     sys.stdin = codecs.getwriter('utf-8')(sys.stdin)
-    path = '/Users/arenduchintala/PycharmProjects/alignment-FSTs/coursera-20/train-20-hmm/'
-    #path = '/Users/arenduchintala/PycharmProjects/alignment-FSTs/toy2-model1/'
-    #path = 'data/toy2/'
-    out_path = path + 'learned.features.reg.from.m1.'
+    path = opts.fstLocation
+    out_path = opts.weightsLocation + 'learned.features.l1.'
     print 'reading data...'
     f_names = dict((tuple(n.split()[1].split('|||')), int(n.split()[0])) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_ids = dict((int(n.split()[0]), tuple(n.split()[1].split('|||'))) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
-    f_init_weights = dict((int(n.split()[0]), -float(n.split()[1])) for n in codecs.open(path + 'E.from.m1.init.weights', 'r', 'utf-8').readlines())
+    f_init_weights = dict((int(n.split()[0]), -float(n.split()[1])) for n in codecs.open(path + 'E.weights', 'r', 'utf-8').readlines())
     inp_machines, obs_chain, exp_machines = zip(*[tuple(l.split()) for l in codecs.open(path + 'filenames', 'r').readlines()[1:]])
 
     inp_machines = ns(inp_machines)
