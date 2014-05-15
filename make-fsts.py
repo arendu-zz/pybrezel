@@ -128,7 +128,7 @@ if __name__ == '__main__':
     optparser.add_option("-t", "--target", dest="target", default="data/toy2/fr", help="target file")
     optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
-    optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=5, type="int", help="span width to count co-occurrence")
+    optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
     (opts, _) = optparser.parse_args()
     sym_features = fst.SymbolTable()
     sym_features[fst.EPSILON] = 0
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     for idx, (src_sent, tar_sent) in enumerate(zip(source_sentences, target_sentences)):
         tl = tar_sent.split()
         sl = src_sent.split()
-        #sl.insert(0, 'NULL')
+        sl.insert(0, 'NULL')
         V.update(tl)
         for (from_id, to_id) in it.product(range(len(sl)), range(len(sl))):
             if abs(from_id - to_id) > jump_limit:
@@ -177,9 +177,9 @@ if __name__ == '__main__':
             max_co = max(count_kc)[0]
             min_co = min(count_kc)[0]
             #major hack
-            if max_co - min_co > 300 and k != 'NULL':
-                bottom_percent = min_co + (0.2 * (max_co - min_co))
-                count_kc = [(countv, v) for (countv, v) in count_kc if countv >= bottom_percent]
+            #if max_co - min_co > 300 and k != 'NULL':
+            #    bottom_percent = min_co + (0.2 * (max_co - min_co))
+            #    count_kc = [(countv, v) for (countv, v) in count_kc if countv >= bottom_percent]
             co_occurrence[k] = count_kc
 
     pool = Pool(processes=multiprocessing.cpu_count())

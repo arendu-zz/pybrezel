@@ -4,6 +4,7 @@ from DifferentiableFunction import DifferentiableFunction
 import fst, sys, codecs, pdb
 from pprint import pprint
 from math import exp as expm
+from math import sqrt
 from logadd import logadd
 import random as rand
 import codecs
@@ -60,12 +61,8 @@ def gradient(theta):
         ok = obs_counts[k]
         ek = exp_counts[k]
         #exp(c)-exp(e)
-        if i == '.' and o == '.':
-            print 'ok', ok, 'ek', ek
         s1 = expm(-float(ok))
         s2 = expm(-float(ek))
-        if i == '.' and o == '.':
-            print 'ok', ok, 'ek', ek, 's1', s1, 's2', s2, '=', s1 - s2
         grad[k] = s1 - s2
         #print grad[k], '=', s2, '-', s1, i, o
         #pdb.set_trace()
@@ -157,7 +154,7 @@ def value(theta):
         likelihood += get_likelihood(e, o_chain, theta)
     reg = sum(abs(t) for t in theta.values())
     print 'll', likelihood, 'reg', reg
-    return likelihood + reg
+    return likelihood
 
 
 if __name__ == '__main__':
