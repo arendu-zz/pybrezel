@@ -124,8 +124,8 @@ def write_E(save_path, ename, feature_labels_seen, co_oc):
 
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
-    optparser.add_option("-s", "--source", dest="source", default="data/toy2/en", help="source file")
-    optparser.add_option("-t", "--target", dest="target", default="data/toy2/fr", help="target file")
+    optparser.add_option("-s", "--source", dest="source", default="data/toy1/en", help="source file")
+    optparser.add_option("-t", "--target", dest="target", default="data/toy1/fr", help="target file")
     optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
     optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
@@ -207,12 +207,12 @@ if __name__ == '__main__':
     idx = 0
     for feat in global_features:
         for countv, v in co_occurrence[feat]:
-            idx += 1
             E_fst.add_arc(0, 0, feat, v, 0.0)
             writer_features.write(str(idx) + '\t' + feat + '|||' + v + '\n')
             writer_int_names.write(str(idx) + '\t' + str(sym_features[feat]) + '\t' + str(sym_targets[v]) + '\n')
             writer_weights.write(str(idx) + '\t' + str(0.0) + '\n')
             writer_ids.write(str(idx) + '\t' + str(idx) + '\n')
+            idx += 1
     E_fst[0].final = True
     E_fst.write(save_path + 'E.fst', sym_features, sym_targets)
     writer_weights.flush()
