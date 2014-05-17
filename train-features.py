@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = 'arenduchintala'
 from DifferentiableFunction import DifferentiableFunction
+import numpy as np
+from scipy.optimize import fmin_l_bfgs_b
 import fst, sys, codecs, pdb
 from pprint import pprint
 from math import exp as expm
@@ -23,10 +25,10 @@ def write_learned_features(theta):
     print 'writing learned features...'
     iteration_num += 1
     writer = codecs.open(out_path + '.' + str(iteration_num), 'w', 'utf-8')
-    for k in theta:
-        feats = f_ids[k][0].encode('utf-8') + '|||' + f_ids[k][1].encode('utf-8')
+    for idx, k in enumerate(theta):
+        feats = f_ids[idx][0].encode('utf-8') + '|||' + f_ids[idx][1].encode('utf-8')
         # str('|||'.join(f_ids[k]))
-        s = str(k) + '\t' + feats + '\t' + str(theta[k])
+        s = str(idx) + '\t' + feats + '\t' + str(k)
         #print s
         writer.write(s.decode('utf8') + '\n')
     writer.flush()
@@ -55,7 +57,7 @@ def gradient(theta):
         exp_counts = accumilate_counts(e_counts, exp_counts)
         obs_counts = accumilate_counts(o_counts, obs_counts)
 
-    grad = {}
+    grad = np.zeros(len(theta))
     for i, o in f_names:
         k = f_names[i, o]
         ok = obs_counts[k]
@@ -115,13 +117,14 @@ def accumilate_counts(sparse_counts, global_counts):
     return global_counts
 
 
-def apply_weights(machine, weights):
+def apply_weights(machine, theta):
     #machine.write('before.fst', machine.isyms, machine.osyms)
     for s in machine.states:
         for a in s.arcs:
             f_id = get_feature_id(a.ilabel, a.olabel, machine)
+            print 'f_id', f_id, a.ilabel, a.olabel
             if f_id is not None:
-                a.weight = fst.LogWeight(weights[f_id])
+                a.weight = fst.LogWeight(theta[f_id])
     #machine.write('after.fst', machine.isyms, machine.osyms)
     #exit()
     return machine
@@ -152,7 +155,7 @@ def value(theta):
         e = fst.read(path + e_file)
         o_chain = fst.read(path + o_chain_file)
         likelihood += get_likelihood(e, o_chain, theta)
-    reg = sum(abs(t) for t in theta.values())
+    reg = np.linalg.norm(theta, ord=1)
     print 'll', likelihood, 'reg', reg
     return likelihood
 
@@ -165,17 +168,20 @@ if __name__ == '__main__':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
     sys.stdin = codecs.getwriter('utf-8')(sys.stdin)
     path = opts.fstLocation
-    out_path = opts.weightsLocation + 'learned.features.l1.'
+    out_path = opts.weightsLocation + 'learned.features.'
     print 'reading data...'
     f_names = dict((tuple(n.split()[1].split('|||')), int(n.split()[0])) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_ids = dict((int(n.split()[0]), tuple(n.split()[1].split('|||'))) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
-    f_init_weights = dict((int(n.split()[0]), -float(n.split()[1])) for n in codecs.open(path + 'E.weights', 'r', 'utf-8').readlines())
+    f_init_weights = [-float(n.split()[1]) for n in codecs.open(path + 'E.weights', 'r', 'utf-8').readlines()]
     inp_machines, obs_chain, exp_machines = zip(*[tuple(l.split()) for l in codecs.open(path + 'filenames', 'r').readlines()[1:]])
 
     inp_machines = ns(inp_machines)
     exp_machines = ns(exp_machines)
     obs_chain = ns(obs_chain)
 
-    F = DifferentiableFunction(value, gradient)
-    (fopt, theta, return_status) = F.minimize(f_init_weights)
-    write_learned_features(theta)
+    #F = DifferentiableFunction(value, gradient)
+    #(fopt, theta, return_status) = F.minimize(f_init_weights)
+    #write_learned_features(theta)
+    initial_theta = np.array(f_init_weights)
+    (xopt, fopt, return_status) = fmin_l_bfgs_b(value, initial_theta, gradient, pgtol=0.001)
+    write_learned_features(xopt)
