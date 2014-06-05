@@ -124,8 +124,8 @@ def write_E(save_path, ename, feature_labels_seen, co_oc):
 
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
-    optparser.add_option("-s", "--source", dest="source", default="data/toy1/en", help="source file")
-    optparser.add_option("-t", "--target", dest="target", default="data/toy1/fr", help="target file")
+    optparser.add_option("-s", "--source", dest="source", default="data/toy2/en", help="source file")
+    optparser.add_option("-t", "--target", dest="target", default="data/toy2/fr", help="target file")
     optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
     optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
