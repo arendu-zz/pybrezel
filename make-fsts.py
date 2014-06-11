@@ -95,7 +95,7 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     os.system(cmd)
     cmd1 = 'fstcompose ' + save_path + str(idx) + '.exp.fst ' + save_path + str(idx) + '.y.fst > ' + save_path + str(idx) + '.obs.fst'
     os.system(cmd1)
-    names = str(idx) + '.inp.fst' + '\t' + str(idx) + '.y.fst' + '\t' + str(idx) + '.exp.fst'
+    names = str(idx) + '.inp.fst' + '\t' + str(idx) + '.y.fst' + '\t' + str(idx) + '.exp.fst' + '\t' + str(idx) + '.obs.fst'
     return feature_labels_seen, names
 
 

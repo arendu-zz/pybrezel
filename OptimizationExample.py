@@ -38,8 +38,10 @@ def gradient(theta):
 # theta is a feature vector with initialized values
 theta = {"x": 0.0, "y": 0.0}
 F = DifferentiableFunction(value, gradient)
+#fd = F.fprime(theta)
+#print 'finite diff', fd
 (fopt, theta, return_status) = F.maximize(theta)
-# after optimization, theta now has the optimal feature values
+#after optimization, theta now has the optimal feature values
 print "Max f(x) = %f at x = %f y = %f" % (fopt, theta.get("x"), theta.get("y"))
 # always check the return status. Sometimes the optimizer returns quickly but it doesn't converge!
 print return_status

@@ -3,7 +3,7 @@
 # Xuchen Yao, 9/23/2011, first draft
 # Xuchen Yao, 9/26/2011, add L-BFGS support (CG is too slow)
 # Xuchen Yao, 10/02/2011, major bug fix, add return status
-
+import numpy as np
 from numpy import asarray, zeros
 
 
@@ -44,6 +44,37 @@ class DifferentiableFunction:
             self.h_times_gradient = None
             self.f_theta_h_debug = None
         return
+
+    def fprime(self, theta):
+        self.size = len(theta)
+        initials = []
+        index = 0
+        self.feature2index, self.index2feature = {}, {}
+        for feature, value in theta.items():
+            self.feature2index[feature] = index
+            self.index2feature[index] = feature
+            initials.append(float(value))
+            index += 1
+        from scipy.optimize import approx_fprime
+
+        eps = np.sqrt(np.finfo(np.float).eps)
+        return approx_fprime(initials, self.value_translator, [eps] * self.size)
+
+
+    def finite_diff(self, theta):
+        self.size = len(theta)
+        initials = []
+        index = 0
+        self.feature2index, self.index2feature = {}, {}
+        for feature, value in theta.items():
+            self.feature2index[feature] = index
+            self.index2feature[index] = feature
+            initials.append(float(value))
+            index += 1
+        from scipy.optimize import check_grad
+
+        return check_grad(self.value_translator, self.gradient_translator, initials)
+
 
     def value_translator(self, point):
         '''We are trying to optimize a function of a parameter vector.
@@ -125,7 +156,7 @@ class DifferentiableFunction:
         if self.method == "LBFGS":
             from scipy.optimize import fmin_l_bfgs_b
             # http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html
-            (xopt, fopt, return_status) = fmin_l_bfgs_b(self.value_translator, initials, self.gradient_translator, pgtol=0.001)
+            (xopt, fopt, return_status) = fmin_l_bfgs_b(self.value_translator, initials, self.gradient_translator, pgtol=0.01)
             #print "============Optimization by LBFGS returns: ", return_status['task']
         elif self.method == "CG":
             from scipy.optimize import fmin_cg
