@@ -175,7 +175,8 @@ if __name__ == '__main__':
     f_names = dict((tuple(n.split()[1].split('|||')), int(n.split()[0]) ) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_ids = dict((int(n.split()[0]), tuple(n.split()[1].split('|||'))) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_init_weights = [-float(n.split()[1]) for n in codecs.open(path + 'E.weights', 'r', 'utf-8').readlines()]
-    inp_machines, obs_chain, exp_machines = zip(*[tuple(l.split()) for l in codecs.open(path + 'filenames', 'r').readlines()[1:]])
+    inp_machines, obs_chain, exp_machines, obs_machines = zip(
+        *[tuple(l.split()) for l in codecs.open(path + 'filenames', 'r').readlines()[1:]])
 
     inp_machines = ns(inp_machines)
     exp_machines = ns(exp_machines)
@@ -184,8 +185,13 @@ if __name__ == '__main__':
     #F = DifferentiableFunction(value, gradient)
     #(fopt, theta, return_status) = F.minimize(f_init_weights)
     #write_learned_features(theta)
+    #(xopt, fopt, return_status) = fmin_l_bfgs_b(value, initial_theta, gradient, pgtol=0.001)
+    #write_learned_features(xopt)
 
-    initial_theta = np.random.uniform(-10, 10, len(f_init_weights))  #np.array(f_init_weights)
+    '''
+    finite differences check
+    '''
+    initial_theta = np.random.uniform(-1, 1, len(f_init_weights))  #np.array(f_init_weights)
     eps = 0.001  # np.finfo(float).eps
     fprime = approx_fprime(initial_theta, value, [eps] * len(initial_theta))
     init_grad = gradient(initial_theta)
@@ -193,5 +199,4 @@ if __name__ == '__main__':
     print 'fprime, init_grad'
     pprint(zip(fprime, init_grad))
     print 'cg', cg
-    #(xopt, fopt, return_status) = fmin_l_bfgs_b(value, initial_theta, gradient, pgtol=0.001)
-    #write_learned_features(xopt)
+
