@@ -15,7 +15,7 @@ filenames = []
 
 
 def get_weight(feat, emit, co):
-    #done by taking the first token after comma separating feat
+    # done by taking the first token after comma separating feat
     f = feat.split(',')[0]
     e = co[f]
     if emit in e:
@@ -29,7 +29,7 @@ def limited_distortion(feature_labels, len_tar, sym_features, sym_target, co_oc)
     d_lim = fst.LogTransducer(sym_features, sym_features)
     for i in range(len_tar):
         for feature in feature_labels:
-            #for countv, v in co_oc[feature]:
+            # for countv, v in co_oc[feature]:
             d_lim.add_arc(i, i + 1, feature, feature, 0.0)
     d_lim[i + 1].final = True
     return d_lim
@@ -39,11 +39,11 @@ def get_feature(feature_type, from_id, to_id, from_token, to_token, emit_token=N
     if feature_type == 'model1':
         return from_token
     elif feature_type == 'hmm':  # HMM feature with relative jump distance
-        return str(abs(from_id - to_id)) + ',' + from_token
+        return from_token + '|||' + str(abs(from_id - to_id))
     elif feature_type == 'allfeatures':
-        return from_token + ',' + str(from_id) + '-' + to_token + ',' + str(to_id)
+        return from_token + '|||' + str(from_id) + '|||' + to_token + '|||' + str(to_id)
     else:
-        return from_token + ',' + to_token
+        return from_token + '|||' + to_token
 
 
 def accumilate_features(results):
@@ -88,7 +88,7 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     y[y_idx + 1].final = True
     y.write(save_path + str(idx) + '.y.fst', sym_targets, sym_targets)
 
-    #print 'saved files.. starting composition...'
+    # print 'saved files.. starting composition...'
     write_E(save_path, str(idx), feature_labels_seen, co_oc)
 
     cmd = 'fstcompose ' + save_path + str(idx) + '.inp.fst ' + save_path + str(idx) + '.E.fst > ' + save_path + str(idx) + '.exp.fst'
@@ -124,9 +124,9 @@ def write_E(save_path, ename, feature_labels_seen, co_oc):
 
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
-    optparser.add_option("-s", "--source", dest="source", default="data/toy2/en", help="source file")
-    optparser.add_option("-t", "--target", dest="target", default="data/toy2/fr", help="target file")
-    optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
+    optparser.add_option("-s", "--source", dest="source", default="data/toy1/en", help="source file")
+    optparser.add_option("-t", "--target", dest="target", default="data/toy1/fr", help="target file")
+    optparser.add_option("-f", "--feature-type", dest="featureType", default="allfeatures", help="encode model1 or hmm features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
     optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
     (opts, _) = optparser.parse_args()
@@ -161,7 +161,7 @@ if __name__ == '__main__':
             feature_label = get_feature(feature_type, from_id, to_id, from_token, to_token)
             sym_features[feature_label]
             co = co_occurrence.get(feature_label, {})
-            #co += list(set(tl))  # count how many times it was seen together per sentence but not within a sentence
+            # co += list(set(tl))  # count how many times it was seen together per sentence but not within a sentence
             for t in set(tl):  # count how many times it was seen together per sentence but not within a sentence
                 co[t] = co.get(t, 0) + 1
                 sym_targets[t]
@@ -176,19 +176,19 @@ if __name__ == '__main__':
         if len(count_kc) > 0:
             max_co = max(count_kc)[0]
             min_co = min(count_kc)[0]
-            #major hack
-            #if max_co - min_co > 300 and k != 'NULL':
-            #    bottom_percent = min_co + (0.2 * (max_co - min_co))
-            #    count_kc = [(countv, v) for (countv, v) in count_kc if countv >= bottom_percent]
+            # major hack
+            # if max_co - min_co > 300 and k != 'NULL':
+            # bottom_percent = min_co + (0.2 * (max_co - min_co))
+            # count_kc = [(countv, v) for (countv, v) in count_kc if countv >= bottom_percent]
             co_occurrence[k] = count_kc
 
     pool = Pool(processes=multiprocessing.cpu_count())
     for idx, (src, tar) in enumerate(zip(src_list, tar_list)):
-        #print src, '\n', tar
+        # print src, '\n', tar
         pool.apply_async(save_fst, args=(idx, src, tar, save_path, feature_type, co_occurrence), callback=accumilate_features)
     pool.close()
     pool.join()
-    #write_E(save_path, 'FullE', global_features, co_occurrence)
+    # write_E(save_path, 'FullE', global_features, co_occurrence)
     writer_filenames = open(save_path + 'filenames', 'w')
     writer_filenames.write(str(len(filenames)) + '\n')
     writer_filenames.write('\n'.join(sorted(filenames)))
