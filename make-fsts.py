@@ -121,7 +121,7 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
             writer_weights.write(str(idx) + '\t' + str(0.0) + '\n')
             writer_ids.write(str(idx) + '\t' + str(idx) + '\n')
     E_fst[0].final = True
-    E_fst.write(save_path + ename + '.E.fst', sym_features, sym_targets)
+    E_fst.write(ename + '.E.fst', sym_features, sym_targets)
     limited_exp = fst.LogTransducer(sym_features, sym_targets)
     limited_exp = inp_limited.compose(E_fst)
     # limited_exp.write(save_path + ename + '.exp_limited.fst', sym_features, sym_targets)
@@ -135,7 +135,7 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
                 outgoing_arcs = outgoing_arc_from_state.get(from_state, [])
                 outgoing_arcs.append(sym_f + ':' + sym_t)
                 outgoing_arc_from_state[from_state] = outgoing_arcs
-    writer_outgoing_arcs = open(save_path + ename + '.outgoing_arc.map', 'w')
+    writer_outgoing_arcs = open(ename + '.outgoing_arc.map', 'w')
     for fs, arcs in outgoing_arc_from_state.items():
         writer_outgoing_arcs.write(fs + '\t' + ','.join(arcs) + '\n')
     writer_outgoing_arcs.flush()
