@@ -97,13 +97,14 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     y.write(save_path + str(idx) + '.y.fst', sym_targets, sym_targets)
 
     # print 'saved files.. starting composition...'
-    write_E(save_path, str(idx), feature_labels_seen, co_oc, inp_limited)
+    e_file, outgoing_file = write_E(save_path, str(idx), feature_labels_seen, co_oc, inp_limited)
 
     cmd = 'fstcompose ' + save_path + str(idx) + '.inp.fst ' + save_path + str(idx) + '.E.fst > ' + save_path + str(idx) + '.exp.fst'
     os.system(cmd)
     cmd1 = 'fstcompose ' + save_path + str(idx) + '.exp.fst ' + save_path + str(idx) + '.y.fst > ' + save_path + str(idx) + '.obs.fst'
     os.system(cmd1)
-    names = str(idx) + '.inp.fst' + '\t' + str(idx) + '.y.fst' + '\t' + str(idx) + '.exp.fst' + '\t' + str(idx) + '.obs.fst'
+    names = str(idx) + '.inp.fst' + '\t' + str(idx) + '.y.fst' + '\t' + str(idx) + '.exp.fst' + '\t' + str(
+        idx) + '.obs.fst' + '\t' + e_file + '\t' + outgoing_file
     return feature_labels_seen, names
 
 
@@ -112,6 +113,8 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
     writer_weights = open(save_path + ename + '.E.weights', 'w')
     writer_ids = open(save_path + ename + '.E.ids', 'w')
     E_fst = fst.LogTransducer(sym_features, sym_targets)
+    e_file_name = ename + '.E.fst'
+    ougoing_file_name = ename + '.outgoing_arc.map'
     idx = 0
     for feat in feature_labels_seen:
         for countv, v in co_oc[feat]:
@@ -121,7 +124,7 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
             writer_weights.write(str(idx) + '\t' + str(0.0) + '\n')
             writer_ids.write(str(idx) + '\t' + str(idx) + '\n')
     E_fst[0].final = True
-    E_fst.write(ename + '.E.fst', sym_features, sym_targets)
+    E_fst.write(save_path + e_file_name, sym_features, sym_targets)
     limited_exp = fst.LogTransducer(sym_features, sym_targets)
     limited_exp = inp_limited.compose(E_fst)
     # limited_exp.write(save_path + ename + '.exp_limited.fst', sym_features, sym_targets)
@@ -135,7 +138,7 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
                 outgoing_arcs = outgoing_arc_from_state.get(from_state, [])
                 outgoing_arcs.append(sym_f + ':' + sym_t)
                 outgoing_arc_from_state[from_state] = outgoing_arcs
-    writer_outgoing_arcs = open(ename + '.outgoing_arc.map', 'w')
+    writer_outgoing_arcs = open(save_path + ougoing_file_name, 'w')
     for fs, arcs in outgoing_arc_from_state.items():
         writer_outgoing_arcs.write(fs + '\t' + ','.join(arcs) + '\n')
     writer_outgoing_arcs.flush()
@@ -146,6 +149,7 @@ def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
     writer_features.close()
     writer_ids.close()
     writer_outgoing_arcs.close()
+    return e_file_name, ougoing_file_name
 
 
 if __name__ == '__main__':
