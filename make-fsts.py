@@ -32,7 +32,13 @@ def limited_distortion(feature_labels, len_tar, sym_features, sym_target, co_oc)
             # for countv, v in co_oc[feature]:
             d_lim.add_arc(i, i + 1, feature, feature, 0.0)
     d_lim[i + 1].final = True
-    return d_lim
+    d_lim_1 = fst.LogTransducer(sym_features, sym_features)
+    for i in range(1):
+        for feature in feature_labels:
+            # for countv, v in co_oc[feature]:
+            d_lim_1.add_arc(i, i + 1, feature, feature, 0.0)
+    d_lim_1[i + 1].final = True
+    return d_lim, d_lim_1
 
 
 def get_feature(feature_type, from_id, to_id, from_token, to_token, emit_token=None):
@@ -77,11 +83,13 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     trans_fst.arc_sort_input()
     trans_fst.write(save_path + str(idx) + '.trans.fst', sym_features, sym_features)
     feature_labels_seen = set(feature_labels_seen)
-    d = limited_distortion(feature_labels_seen, len(tar), sym_features, sym_features, co_oc)
+    d, d_1 = limited_distortion(feature_labels_seen, len(tar), sym_features, sym_features, co_oc)
     d.arc_sort_input()
+    d_1.arc_sort_input()
     d.write(save_path + str(idx) + '.d.fst', sym_features, sym_features)
     inp = trans_fst.compose(d)
     inp.write(save_path + str(idx) + '.inp.fst', sym_features, sym_features)
+    inp_limited = trans_fst.compose(d_1)
     y = fst.LogTransducer(sym_targets, sym_targets)
     for y_idx, t in enumerate(tar):
         y.add_arc(y_idx, y_idx + 1, t, t, 0.0)
@@ -89,7 +97,7 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     y.write(save_path + str(idx) + '.y.fst', sym_targets, sym_targets)
 
     # print 'saved files.. starting composition...'
-    write_E(save_path, str(idx), feature_labels_seen, co_oc)
+    write_E(save_path, str(idx), feature_labels_seen, co_oc, inp_limited)
 
     cmd = 'fstcompose ' + save_path + str(idx) + '.inp.fst ' + save_path + str(idx) + '.E.fst > ' + save_path + str(idx) + '.exp.fst'
     os.system(cmd)
@@ -99,7 +107,7 @@ def save_fst(idx, src, tar, save_path, feature_type, co_oc):
     return feature_labels_seen, names
 
 
-def write_E(save_path, ename, feature_labels_seen, co_oc):
+def write_E(save_path, ename, feature_labels_seen, co_oc, inp_limited):
     writer_features = open(save_path + ename + '.E.names', 'w')
     writer_weights = open(save_path + ename + '.E.weights', 'w')
     writer_ids = open(save_path + ename + '.E.ids', 'w')
@@ -114,19 +122,37 @@ def write_E(save_path, ename, feature_labels_seen, co_oc):
             writer_ids.write(str(idx) + '\t' + str(idx) + '\n')
     E_fst[0].final = True
     E_fst.write(save_path + ename + '.E.fst', sym_features, sym_targets)
+    limited_exp = fst.LogTransducer(sym_features, sym_targets)
+    limited_exp = inp_limited.compose(E_fst)
+    # limited_exp.write(save_path + ename + '.exp_limited.fst', sym_features, sym_targets)
+    outgoing_arc_from_state = {}
+    for s in limited_exp:
+        for a in s.arcs:
+            if not (a.ilabel == 0 and a.olabel == 0):
+                sym_f = sym_features.find(a.ilabel)
+                sym_t = sym_targets.find(a.olabel)
+                from_state = sym_f.split('|||')[0]  # hack, the first part of the string should be the from state of the arc
+                outgoing_arcs = outgoing_arc_from_state.get(from_state, [])
+                outgoing_arcs.append(sym_f + ':' + sym_t)
+                outgoing_arc_from_state[from_state] = outgoing_arcs
+    writer_outgoing_arcs = open(save_path + ename + '.outgoing_arc.map', 'w')
+    for fs, arcs in outgoing_arc_from_state.items():
+        writer_outgoing_arcs.write(fs + '\t' + ','.join(arcs) + '\n')
+    writer_outgoing_arcs.flush()
     writer_weights.flush()
     writer_features.flush()
     writer_ids.flush()
     writer_weights.close()
     writer_features.close()
     writer_ids.close()
+    writer_outgoing_arcs.close()
 
 
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
     optparser.add_option("-s", "--source", dest="source", default="data/toy1/en", help="source file")
     optparser.add_option("-t", "--target", dest="target", default="data/toy1/fr", help="target file")
-    optparser.add_option("-f", "--feature-type", dest="featureType", default="allfeatures", help="encode model1 or hmm features")
+    optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
     optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
     (opts, _) = optparser.parse_args()
