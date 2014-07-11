@@ -44,6 +44,8 @@ def limited_distortion(feature_labels, len_tar, sym_features, sym_target, co_oc)
 def get_feature(feature_type, from_id, to_id, from_token, to_token, emit_token=None):
     if feature_type == 'model1':
         return from_token
+    elif feature_type == 'fromto':
+        return from_token + '|||' + to_token
     elif feature_type == 'hmm':  # HMM feature with relative jump distance
         return from_token + '|||' + str(abs(from_id - to_id))
     elif feature_type == 'allfeatures':
@@ -156,7 +158,8 @@ if __name__ == '__main__':
     optparser = optparse.OptionParser()
     optparser.add_option("-s", "--source", dest="source", default="data/toy1/en", help="source file")
     optparser.add_option("-t", "--target", dest="target", default="data/toy1/fr", help="target file")
-    optparser.add_option("-f", "--feature-type", dest="featureType", default="model1", help="encode model1 or hmm features")
+    optparser.add_option("-f", "--feature-type", dest="featureType", default="model1fst", help="encode model1 or hmm "
+    "features")
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="Where to save the created fsts")
     optparser.add_option("-j", "--jump-width", dest="jumpWidth", default=100, type="int", help="span width to count co-occurrence")
     (opts, _) = optparser.parse_args()
