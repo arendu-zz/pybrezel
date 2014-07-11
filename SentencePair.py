@@ -8,7 +8,8 @@ class SentencePair:
         self.Y = Y  # FSA representing source word transitions (for this source sentence)
         self.E = E  # FST of word translations
         self.x = x  # linear chain FSA of target sentence
-        self.e = {}  # dictionary holding expectation counts of features fired in the sent pair
+        self.expectedCounts = {}  # dictionary holding expectation counts of features fired in the sent pair
+        # does it make sense for this variable to be static across all
         self.dc = {}  # dictionary holding the tuple (decision,type) (as key) and a list of contexts that it appears with
 
     def getFeatureDecomposition(self, arc):
@@ -39,12 +40,12 @@ class SentencePair:
                 from_state = isyms.find(a.ilabel).split('|||')[0]
                 to_state = isyms.find(a.ilabel).split('|||')[1]
                 arc_exp = alpha_s.__mul__(a_weight).__mul__(beta_t).__div__(beta[0])
-                current_wt = self.e.get((from_state, osyms.find(a.olabel)), fst.LogWeight.ZERO)
+                current_wt = self.expectedCounts.get((from_state, osyms.find(a.olabel)), fst.LogWeight.ZERO)
                 current_wt = current_wt.__add__(arc_exp)
                 '''
                 emission feature type
                 '''
-                self.e[isyms.find(a.ilabel), osyms.find(a.olabel)] = current_wt
+                self.expectedCounts[isyms.find(a.ilabel), osyms.find(a.olabel)] = current_wt
                 '''
                 adding context of the emission decision into dc dictionary
                 '''
@@ -54,9 +55,9 @@ class SentencePair:
                 '''
                 transition feature type
                 '''
-                current_wt = self.e.get((from_state, to_state), fst.LogWeight.ZERO)
+                current_wt = self.expectedCounts.get((from_state, to_state), fst.LogWeight.ZERO)
                 current_wt = current_wt.__add__(arc_exp)
-                self.e[from_state, to_state] = current_wt
+                self.expectedCounts[from_state, to_state] = current_wt
                 '''
                 adding context of transition decision into dc dict
                 '''
