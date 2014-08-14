@@ -161,7 +161,6 @@ def value(theta):
     print 'll', likelihood, 'reg', reg
     return likelihood
 
-
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
     optparser.add_option("-l", "--fst-location", dest="fstLocation", default="fsts/", help="location of created fsts")
@@ -175,7 +174,7 @@ if __name__ == '__main__':
     f_names = dict((tuple(n.split()[1].split('|||')), int(n.split()[0]) ) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_ids = dict((int(n.split()[0]), tuple(n.split()[1].split('|||'))) for n in codecs.open(path + 'E.names', 'r', 'utf-8').readlines())
     f_init_weights = [-float(n.split()[1]) for n in codecs.open(path + 'E.weights', 'r', 'utf-8').readlines()]
-    inp_machines, obs_chain, exp_machines, obs_machines = zip(
+    inp_machines, obs_chain, exp_machines, obs_machines, E_machines, outgoing_arcs  = zip(
         *[tuple(l.split()) for l in codecs.open(path + 'filenames', 'r').readlines()[1:]])
 
     inp_machines = ns(inp_machines)
